@@ -1,5 +1,5 @@
 // ! XMLHttpRequest es quien me ayudara a hacer la peticion a la API 
-const XMLHttpRequest = require('xmlhttprequest');
+const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
 // * URL de la API
 const API = 'https://api.escuelajs.co/api/v1';
 
@@ -24,16 +24,37 @@ function fetchData(urlApi, callback) {
         // ! el valor de error que sera igual a null y el response tipo texto que me emtrega el API
         // ! el cual convertiremos a JSON
         callback(null, JSON.parse(xhttp.responseText));
+      } else {
+        // * en caso de que el codigo dentro de Status no sea igual a 200
+        // * se crea un nuevo error y le paso el error y el URL del API
+        const error = new Error('Error' + urlApi);
+        //  aqui retornaremos el callback que es la funcion que retendra mis dos valores
+        // ! el valor de error que sera igual al error y el response que sera igual null
+        return callback(error, null);
       }
-    } else {
-      // * en caso de que el codigo dentro de Status no sea igual a 200
-      // * se crea un nuevo error y le paso el error y el URL del API
-      const error = new Error('Error' + urlApi);
-      //  aqui retornaremos el callback que es la funcion que retendra mis dos valores
-      // ! el valor de error que sera igual al error y el response que sera igual null
-      return callback(error, null);
-    }
+    } 
   }
   // ! este metodo envia la peticion
   xhttp.send();
 }
+
+// * ejecutamos la funcion que ara una peticion y nos traera la data que necesitamos
+fetchData(`${API}/products`, (error1, data1) => {
+  // * en caso de que el argumento de error sea verdadero me retornara el error por consola
+  if(error1) return console.log(error1);
+
+  // * ejecuto 2 veces mas la funcion para hacer otras peticiones
+  fetchData(`${API}/products/${data1[0].id}`, (error2, data2) => {
+    if(error2) return console.log(error2);
+    fetchData(`${API}/categories/${data2?.category?.id}`, (error3, data3) => {
+      if(error3) return console.log(error3);
+
+      // * data de la primera peticion
+      console.log(data1[0]);
+      // * data de la segunda peticion
+      console.log(data2.title);
+      // * data de la tercerta peticion
+      console.log(data3.name);
+    });
+  });
+});
